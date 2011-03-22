@@ -1,6 +1,6 @@
-require('script1.js');
-require('script2.js');
-require('stylesheet.css');
+include('script1.js');
+include('script2.js');
+include('stylesheet.css');
 
 Framework = {
   version: '1.0.0'

@@ -1,4 +1,4 @@
-require('framework.js');
+include('framework.js');
 
 main = function () {
   Framework.script1();
