@@ -12,8 +12,8 @@
 
 (function () {
   var environment = this;
-  var include_derective = 'include';
-  var require_derective = 'require';
+  var include_directive = 'include';
+  var require_directive = 'require';
   var app_entry = null;
 
   var head = (function () {
@@ -34,7 +34,7 @@
     }
   });
 
-  environment[include_derective] = function (dep) {
+  environment[include_directive] = function (dep) {
     
     function isScript(dep) {
       return typeof(dep) === 'string' && !(new RegExp('\\\.css$')).test(dep);
@@ -84,5 +84,5 @@
     }
   };
   
-  environment[require_derective] = function () {};
+  environment[require_directive] = function () {};
 })();
