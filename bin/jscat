@@ -20,7 +20,10 @@ GetOpt.options = GetOpt.parser.parse(system.args.splice(1), {
   help: false
 });
 
-if (GetOpt.options.help) { GetOpt.help(); exit(); }
+if (GetOpt.options.help) { 
+  print('jscat [options] \n' + GetOpt.parser.help());
+  system.exit(); 
+}
 
 var includeDirs = [GetOpt.options.includeDir];
 var sources = fs.listTree(includeDirs[0]);
