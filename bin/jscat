@@ -1,0 +1,62 @@
+var GetOpt = require('ringo/args');
+var fs = require('fs');
+
+GetOpt.parser = new GetOpt.Parser();
+GetOpt.parser
+    .addOption('o', 'outfile', 'outfile', '')
+    .addOption('I', 'include-dir', 'dir', '')
+    .addOption('v', 'verbose', null, 'verbose mode')
+    //.addOption('H', '', null, 'print the name of each included file')
+    .addOption('P', 'inhibit-linemarkers', '', '')
+    .addOption('C', 'keep-comments', null, 'do not discard comments')
+    .addOption('h', 'help', null, 'print help');
+
+GetOpt.options = GetOpt.parser.parse(system.args.splice(1), {
+  outfile: 'out.js',
+  includeDir: fs.workingDirectory(),
+  verbose: false,
+  inhibitLinemarkers: false,
+  keepComments: false,
+  help: false
+});
+
+if (GetOpt.options.help) { GetOpt.help(); exit(); }
+
+var includeDirs = [GetOpt.options.includeDir];
+var sources = fs.listTree(includeDirs[0]);
+sources = sources.filter(function(file) {
+  return fs.extension(file) == '.js';
+});
+sources = sources.map(function(path) {
+  return fs.join(includeDirs[0], path);
+});
+
+var require_re = /require\s*\(\s*[\'\"](\S*)[\'\"]\s*\)\s*;?/;
+var include_re = /include\s*\(\s*[\'\"](\S*)[\'\"]\s*\)\s*;?/;
+
+var out = fs.open(GetOpt.options.outfile, 'w');
+var processed = [];
+
+function l_require (path) {
+  if (processed.some(function (p) { return this == p; }, path)) return;
+  processed.push(path);
+
+  var file = fs.open(sources[i]);
+  var line = null;
+  var match = null;
+
+  for (line in file) {
+    match = require_re.exec(line);
+    if (match) {
+      l_require(match[1]);
+    } else {
+      out.writeLine(line);
+    }
+  }
+}
+
+var i = 0;
+for (i = 0; i < sources.length; i++) {
+  print(sources[i]);
+  l_require(sources[i]);
+}
