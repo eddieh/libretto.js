@@ -41,6 +41,7 @@ var include_re = /include\s*\(\s*[\'\"](\S*)[\'\"]\s*\)\s*;?/;
 
 var out = fs.open(GetOpt.options.outfile, 'w'), outLineNum = 1;
 var processed = [];
+var orderedSources = [];
 
 function l_require (path) {
   if (processed.some(function (p) { return this == p; }, path)) return;
@@ -50,10 +51,6 @@ function l_require (path) {
 
   var line = null, lineNum = 1;
   var match = null;
-
-  if (!GetOpt.options.inhibitLinemarkers) {
-    out.writeLine('// begin: ' + path);
-  }
 
   for (line in file) {
     match = require_re.exec(line);
@@ -75,17 +72,13 @@ function l_require (path) {
       }
 
       l_require(tmp);
-
-    } else {
-      out.writeLine(line);
-      outLineNum = outLineNum + 1;
     }
 
     lineNum = lineNum + 1;
   }
 
-  if (!GetOpt.options.inhibitLinemarkers) {
-    out.writeLine('// end: ' + path + '\n');
+  if (orderedSources.every(function (s) { return this != s.path; }, path)) {
+    orderedSources.push({path:path, length:lineNum});
   }
 }
 
@@ -95,4 +88,23 @@ for (var i = 0; i < sources.length; i++) {
   }
 
   l_require(sources[i]);
+}
+
+for (var i = 0; i < orderedSources.length; i++) {
+  var path = orderedSources[i].path;
+  var file = fs.open(path);
+  var line = null;
+
+  if (!GetOpt.options.inhibitLinemarkers) {
+    out.writeLine('// begin: ' + path);
+  }
+
+  for (line in file) {
+    if (require_re.exec(line)) line = '';
+    out.writeLine(line);
+  }
+
+  if (!GetOpt.options.inhibitLinemarkers) {
+    out.writeLine('// end: ' + path);
+  }
 }
