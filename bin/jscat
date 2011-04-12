@@ -49,7 +49,7 @@ function l_require (path) {
 
   var file = fs.open(path);
 
-  var line = null, lineNum = 1;
+  var line = null, lineNum = 0;
   var match = null;
 
   for (line in file) {
@@ -90,21 +90,61 @@ for (var i = 0; i < sources.length; i++) {
   l_require(sources[i]);
 }
 
+var errorHandler = fs.open('bin/error.tmpl');
+var line = null;
+var paths_and_offsets_re = /###PATHS_AND_OFFSETS###/;
+var filename_re = /###FILENAME###/;
+var match = null;
+var offset = 0;
+
+var errorHandlerStr = '';
+for (line in errorHandler) {
+  errorHandlerStr = errorHandlerStr + line + '\n';
+  offset = offset + 1;
+}
+
+var buffer = '';
+var len = orderedSources.length;
+offset = offset + len;
+for (var i = 0; i < len; i++) {
+  buffer =
+      buffer + ((i == 0) ? '' : '      ')
+      + '{path:\''
+      + orderedSources[i].path
+      + '\', offset:'
+      + offset
+      + '}' + ((i == len - 1) ? '' : ',\n');
+  offset = offset + orderedSources[i].length;
+}
+
+errorHandlerStr = errorHandlerStr.replace(paths_and_offsets_re, buffer);
+errorHandlerStr = errorHandlerStr.replace(filename_re, GetOpt.options.outfile);
+
+out.write(errorHandlerStr);
+
 for (var i = 0; i < orderedSources.length; i++) {
   var path = orderedSources[i].path;
   var file = fs.open(path);
   var line = null;
+  var lineCheck = 0;
 
   if (!GetOpt.options.inhibitLinemarkers) {
-    out.writeLine('// begin: ' + path);
+    //out.writeLine('// begin: ' + path);
   }
 
   for (line in file) {
     if (require_re.exec(line)) line = '';
+    if (include_re.exec(line)) line = '';
     out.writeLine(line);
+    lineCheck = lineCheck + 1;
+  }
+
+  if (orderedSources[i].length != lineCheck) {
+    print('FAIL! ' + orderedSources[i].length + ' != ' + lineCheck);
+    system.exit(1);
   }
 
   if (!GetOpt.options.inhibitLinemarkers) {
-    out.writeLine('// end: ' + path);
+    //out.writeLine('// end: ' + path);
   }
 }

@@ -1,0 +1,20 @@
+Error.prototype.toString = function() {
+  var ret = this.name + ': ' + this.message;
+  var file = this.sourceURL, lastSlash = file.lastIndexOf('/');
+  file = file.substring(lastSlash + 1);
+  function unconcat(e) {
+    var files = [
+      ###PATHS_AND_OFFSETS###
+    ];
+    var i = 0, file = files[i];
+    while (!!files[i + 1] && e.line >= files[i+1].offset) {
+      i = i + 1;
+      file = files[i];
+    }
+    return file.path + ':' + (e.line - (file.offset - 1));
+  }
+  if (file == '###FILENAME###') {
+    ret = ret + '\n  [' + unconcat(this) + ']';
+  }
+  return ret;
+}
