@@ -1,6 +1,9 @@
 var GetOpt = require('ringo/args');
 var fs = require('fs');
 
+/**
+ * Setup the command line option parser
+ */
 GetOpt.parser = new GetOpt.Parser();
 GetOpt.parser
     .addOption('o', 'outfile', 'outfile', '')
@@ -11,6 +14,9 @@ GetOpt.parser
     .addOption('C', 'keep-comments', null, 'do not discard comments')
     .addOption('h', 'help', null, 'print help');
 
+/**
+ * Parse the options, also set defaults
+ */
 GetOpt.options = GetOpt.parser.parse(system.args.splice(1), {
   outfile: 'out.js',
   includeDir: fs.workingDirectory(),
@@ -20,11 +26,17 @@ GetOpt.options = GetOpt.parser.parse(system.args.splice(1), {
   help: false
 });
 
+/**
+ * Help
+ */
 if (GetOpt.options.help) {
   print('jscat [options] \n' + GetOpt.parser.help());
   system.exit(0);
 }
 
+/**
+ * Process include directories
+ */
 var includeDirs = [GetOpt.options.includeDir];
 var sources = fs.listTree(includeDirs[0]);
 sources = sources.filter(function(file) {
@@ -36,6 +48,9 @@ if (includeDirs[0] !== fs.workingDirectory()) {
   });
 }
 
+/**
+ * Resolve require directives
+ */
 var require_re = /require\s*\(\s*[\'\"](\S*)[\'\"]\s*\)\s*;?/;
 var include_re = /include\s*\(\s*[\'\"](\S*)[\'\"]\s*\)\s*;?/;
 
@@ -90,6 +105,12 @@ for (var i = 0; i < sources.length; i++) {
   l_require(sources[i]);
 }
 
+/**
+ * Construct the outfile header. The header consists
+ * of a specialized Error.toString function that contains
+ * determines the correspondence of errors to the original
+ * source files.
+ */
 var errorHandler = fs.open('bin/error.tmpl');
 var line = null;
 var paths_and_offsets_re = /###PATHS_AND_OFFSETS###/;
@@ -116,12 +137,13 @@ for (var i = 0; i < len; i++) {
       + '}' + ((i == len - 1) ? '' : ',\n');
   offset = offset + orderedSources[i].length;
 }
-
 errorHandlerStr = errorHandlerStr.replace(paths_and_offsets_re, buffer);
 errorHandlerStr = errorHandlerStr.replace(filename_re, GetOpt.options.outfile);
 
+/**
+ * Write the outfile
+ */
 out.write(errorHandlerStr);
-
 for (var i = 0; i < orderedSources.length; i++) {
   var path = orderedSources[i].path;
   var file = fs.open(path);
